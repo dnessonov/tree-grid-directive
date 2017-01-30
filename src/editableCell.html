@@ -1,0 +1,7 @@
+<div class="tree-greed-directive-editable-cell-wrap">
+	<div ng-click="vm.clickOnCell()" ng-show="!vm.isInEditMode">{{vm.value}}</div>
+	<div ng-show="vm.isInEditMode">
+		<input class="tree-greed-directive-editable-cell-element" ng-model="vm.value" />
+		<button ng-click="vm.saveValue()">Save</button>
+	</div>
+</div>
