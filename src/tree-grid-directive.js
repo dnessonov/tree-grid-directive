@@ -25,7 +25,7 @@
                     "       </td>\n" +
                     "       <td ng-repeat=\"col in colDefinitions\">\n" +
                     "         <div ng-if=\"col.cellTemplate\" compile=\"col.cellTemplate\" cell-template-scope=\"col.cellTemplateScope\"></div>\n" +
-                    "         <div ng-if=\"!col.cellTemplate\">{{row.branch[col.field]}}</div>\n" +
+					"         <editable-cell value=\"row.branch[col.field]\"></editable-cell>\n" +
                     "       </td>\n" +
                     "     </tr>\n" +
                     "   </tbody>\n" +
@@ -777,4 +777,58 @@
                 }
             }
         });
+
+	angular
+		.module('treeGrid')
+		.component('editableCell', {
+			templateUrl: 'node_modules/angular-bootstrap-grid-tree/src/editableCell.html',
+			controllerAs: 'vm',
+			bindings: {
+				value: '=',
+			},
+			controller: function ($scope, $window) {
+				var vm = this;
+
+				vm.$window = $window;
+
+				vm.isInEditMode = false;
+
+				vm.clickOnCell = function (){
+					console.log('click');
+					vm.isInEditMode = !vm.isInEditMode;
+
+					if (vm.isInEditMode) {
+						vm.$window.onclick = function (event) {
+							closeSearchWhenClickingElsewhere(event, vm.clickOnCell);
+						};
+					} else {
+						vm.isInEditMode = false;
+						console.log(322);
+						vm.$window.onclick = null;
+						$scope.$apply();
+					}
+				}
+
+				vm.saveValue = function(){
+					console.log('save');
+					vm.isInEditMode = false;
+				}
+
+				closeSearchWhenClickingElsewhere = function(event, callbackOnClose) {
+
+					var clickedElement = event.target;
+					if (!clickedElement) return;
+
+					var elementClasses = clickedElement.classList;
+					var clickedOnSearchDrawer = elementClasses.contains('tree-greed-directive-editable-cell-element')
+						|| (clickedElement.parentElement !== null
+						&& clickedElement.parentElement.classList.contains('tree-greed-directive-editable-cell-wrap'));
+					
+					if (!clickedOnSearchDrawer) {
+						callbackOnClose();
+					}
+
+				}
+			}
+		});
 }).call(window);
