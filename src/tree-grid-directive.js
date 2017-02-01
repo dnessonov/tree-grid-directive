@@ -14,7 +14,7 @@
                     "     </tr>\n" +
                     "   </thead>\n" +
                     "   <tbody>\n" +
-                    "     <tr ng-repeat=\"row in tree_rows | searchFor:$parent.filterString:expandingProperty:colDefinitions track by row.branch.uid\"\n" +
+                    "     <tr ng-repeat=\"(index, row) in tree_rows | searchFor:$parent.filterString:expandingProperty:colDefinitions track by row.branch.uid\"\n" +
                     "       ng-class=\"'level-' + {{ row.level }} + (row.branch.selected ? ' active':'')\" class=\"tree-grid-row\">\n" +
                     "       <td><a ng-click=\"user_clicks_branch(row.branch)\"><i ng-class=\"row.tree_icon\"\n" +
                     "              ng-click=\"row.branch.expanded = !row.branch.expanded\"\n" +
@@ -25,7 +25,8 @@
                     "       </td>\n" +
                     "       <td ng-repeat=\"col in colDefinitions\">\n" +
                     "         <div ng-if=\"col.cellTemplate\" compile=\"col.cellTemplate\" cell-template-scope=\"col.cellTemplateScope\"></div>\n" +
-					"         <editable-cell type=\"'text'\" value=\"row.branch[col.field]\"></editable-cell>\n" +
+					"         <editable-cell ng-if=\"col.editable\" type=\"col.type\" value=\"row.branch[col.field]\" on-save=\"onSave(newValue, index, col)\"></editable-cell>\n" +
+					"         <div ng-if=\"!col.cellTemplate && !col.editable\">{{row.branch[col.field]}}</div>\n" +
                     "       </td>\n" +
                     "     </tr>\n" +
                     "   </tbody>\n" +
@@ -206,6 +207,22 @@
                                 }
                             }
                         };
+						scope.onSave = function (newValue, index, col) {
+							if (col.validationFunction){
+								col.validationFunction(newValue)
+									.then(function(result) {
+										if (result.valid){
+											scope.tree_rows[index].branch[col.field] = newValue;
+										}
+									})
+									.catch(function(err) {
+
+									});
+							}else{
+								scope.tree_rows[index].branch[col.field] = newValue;
+							}
+						}
+
                         scope.on_user_click = function (branch) {
                             if (scope.onClick) {
                                 scope.onClick({
