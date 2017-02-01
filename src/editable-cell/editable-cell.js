@@ -9,9 +9,12 @@ angular
 		bindings: {
 			value: '=',
 			type: '=',
+			onSave: '&'
 		},
 		controller: function ($scope, $window, $timeout, $compile, $element) {
 			var vm = this;
+
+			vm.cellValue = vm.value;
 
 			$scope.isInEditMode = false;
 
@@ -24,12 +27,12 @@ angular
 				}
 			}
 
-			$scope.saveValue = function(){
-				console.log('save');
+			$scope.saveValue = function(newValue){
 				$timeout(function() {
 					$scope.isInEditMode = false;
 				}, 0);
 				$window.onclick = null;
+				vm.onSave({'newValue': newValue});
 			}
 
 			closeSearchWhenClickingElsewhere = function(event, $scope) {
@@ -41,8 +44,7 @@ angular
 				var clickedOnSearchDrawer = elementClasses.contains('tree-greed-directive-non-editable-cell-element')
 					|| elementClasses.contains('tree-greed-directive-editable-cell-element')
 					|| elementClasses.contains('tree-greed-directive-editable-cell-control');
-
-				console.log(clickedOnSearchDrawer);
+				
 				if (!clickedOnSearchDrawer) {
 					$scope.isInEditMode = false;
 					$window.onclick = null;
@@ -51,17 +53,18 @@ angular
 
 			}
 
+			$scope.$watch('vm.value', function(newValue, oldValue){
+				vm.cellValue = newValue;
+			}, true);
+
 			this.$onInit = function() {
 				var containerId = 'tree-greed-directive-editable-cell-wrap';
-				console.log(vm.type);
 				if (vm.type === 'text'){
-					console.log(1);
-					var newDirective = angular.element('<editable-input value="vm.value" is-in-edit-mode="isInEditMode" save-value="saveValue()" ></editable-input>');
+					var newDirective = angular.element('<editable-input value="vm.cellValue" is-in-edit-mode="isInEditMode" save-value="saveValue(newValue)" ></editable-input>');
 					$element.children().append(newDirective);
 					$compile(newDirective)($scope);
-				}else if (vm.type === 'checkbox'){
-					console.log(2);
-					var newDirective = angular.element('<editable-checkbox value="vm.value" is-in-edit-mode="isInEditMode" save-value="saveValue()" ></editable-checkbox>');
+				}else if (vm.type === 'checkbox'){						
+					var newDirective = angular.element('<editable-checkbox value="vm.cellValue" is-in-edit-mode="isInEditMode" save-value="saveValue(newValue)" ></editable-checkbox>');
 					$element.children().append(newDirective);
 					$compile(newDirective)($scope);
 				}
