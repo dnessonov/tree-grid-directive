@@ -25,7 +25,7 @@
                     "       </td>\n" +
                     "       <td ng-repeat=\"col in colDefinitions\">\n" +
                     "         <div ng-if=\"col.cellTemplate\" compile=\"col.cellTemplate\" cell-template-scope=\"col.cellTemplateScope\"></div>\n" +
-					"         <editable-cell ng-if=\"col.editable\" type=\"col.type\" value=\"row.branch[col.field]\" on-save=\"onSave(newValue, index, col)\"></editable-cell>\n" +
+					"         <editable-cell ng-if=\"col.editable\" options=\"col\" type=\"col.type\" value=\"row.branch[col.field]\" on-save=\"onSave(newValue, row.branch.uid, col)\"></editable-cell>\n" +
 					"         <div ng-if=\"!col.cellTemplate && !col.editable\">{{row.branch[col.field]}}</div>\n" +
                     "       </td>\n" +
                     "     </tr>\n" +
@@ -207,12 +207,17 @@
                                 }
                             }
                         };
-						scope.onSave = function (newValue, index, col) {
+						scope.onSave = function (newValue, id, col) {
 							if (col.validationFunction){
 								col.validationFunction(newValue)
 									.then(function(result) {
 										if (result.valid){
-											scope.tree_rows[index].branch[col.field] = newValue;
+											for (var i = 0; i < scope.tree_rows.length; i++) {
+												if (scope.tree_rows[i].branch.uid === id){
+													scope.tree_rows[i].branch[col.field] = newValue;
+													break;
+												}
+											}
 										}
 									})
 									.catch(function(err) {
