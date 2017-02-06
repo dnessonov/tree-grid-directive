@@ -1,6 +1,7 @@
 require('./editable-input');
 require('./editable-checkbox');
 require('./editable-select');
+require('./edit-row-position');
 
 angular
 	.module('treeGrid')
@@ -11,11 +12,15 @@ angular
 			value: '=',
 			type: '=',
 			onSave: '&',
-			options: '='
+			onUpdateRow: '&',
+			options: '=',
+			treeRows: '=',
+			row: '=',
+			field: '='
 		},
 		controller: function ($scope, $window, $timeout, $compile, $element) {
 			var vm = this;
-
+			
 			vm.cellValue = vm.value;
 
 			$scope.isInEditMode = false;
@@ -35,6 +40,14 @@ angular
 				}, 0);
 				$window.onclick = null;
 				vm.onSave({'newValue': newValue});
+			}
+
+			$scope.updateRow = function(parentId){
+				$timeout(function() {
+					$scope.isInEditMode = false;
+				}, 0);
+				$window.onclick = null;
+				vm.onUpdateRow({'parentId': parentId});
 			}
 
 			closeSearchWhenClickingElsewhere = function(event, $scope) {
@@ -61,6 +74,7 @@ angular
 
 			this.$onInit = function() {
 				var containerId = 'tree-greed-directive-editable-cell-wrap';
+
 				if (vm.type === 'text'){
 					var newDirective = angular.element('<editable-input value="vm.cellValue" is-in-edit-mode="isInEditMode" save-value="saveValue(newValue)" ></editable-input>');
 					$element.children().append(newDirective);
@@ -71,6 +85,10 @@ angular
 					$compile(newDirective)($scope);
 				}else if (vm.type === 'select'){
 					var newDirective = angular.element('<editable-select options="vm.options" value="vm.cellValue" is-in-edit-mode="isInEditMode" save-value="saveValue(newValue)" ></editable-select>');
+					$element.children().append(newDirective);
+					$compile(newDirective)($scope);
+				}else if (vm.type === 'edit-row-position'){
+					var newDirective = angular.element('<edit-row-position field="vm.field" row="vm.row" tree-rows="vm.treeRows" is-in-edit-mode="isInEditMode" update-row="updateRow(parentId)" ></edit-row-position>');
 					$element.children().append(newDirective);
 					$compile(newDirective)($scope);
 				}
