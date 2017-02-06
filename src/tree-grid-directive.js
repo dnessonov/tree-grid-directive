@@ -28,13 +28,15 @@
 					"         <editable-cell ng-if=\"col.editable\" options=\"col\" type=\"col.type\" value=\"row.branch[col.field]\" on-save=\"onSave(newValue, row.branch.uid, col)\"></editable-cell>\n" +
 					"         <div ng-if=\"!col.cellTemplate && !col.editable\">{{row.branch[col.field]}}</div>\n" +
                     "       </td>\n" +
+					"       <td>\n" +
+					"         <editable-cell type=\"'edit-row-position'\" tree_rows=\"tree_rows\" row=\"row\" field=\"colDefinitions[0].field\" on-update-row=\"onUpdateRowPosition(parentId, row.branch.uid)\"></editable-cell>\n" +
+					"		</td>\n" +
                     "     </tr>\n" +
                     "   </tbody>\n" +
                     " </table>\n" +
                     "</div>\n" +
                     "");
             }]);
-
     angular
         .module('treeGrid', [
             'template/treeGrid/treeGrid.html'
@@ -207,6 +209,45 @@
                                 }
                             }
                         };
+						scope.onUpdateRowPosition = function(parentId, currentId){
+							for (var i = 0; i < scope.tree_rows.length; i++) {
+								if (scope.tree_rows[i].branch.uid === currentId){
+									scope.tree_rows.splice(i, 1);
+								}
+							}
+
+							var foundBranch = null;
+							function findAndDelete(arr, id)
+							{
+								for (var i = 0; i < arr.length; i++) {
+									if (arr[i].uid === id){
+										foundBranch = angular.copy(arr[i]);
+										arr.splice(i, 1);
+									}else if (arr[i].children.length > 0){
+										findAndDelete(arr[i].children, id);
+									}
+								}
+							}
+
+							function changeBranchPosition(arr, id)
+							{
+								for (var i = 0; i < arr.length; i++) {
+									if (arr[i].uid === id){
+										foundBranch.level = arr[i].level + 1;
+										foundBranch.parent_uid = arr[i].uid;
+										arr[i].children.push(foundBranch);
+									}else if (arr[i].children.length > 0){
+										changeBranchPosition(arr[i].children, id);
+									}
+								}
+							}
+
+							findAndDelete(scope.treeData, currentId);
+							if (foundBranch){
+								changeBranchPosition(scope.treeData, parentId);
+							}
+						}
+
 						scope.onSave = function (newValue, id, col) {
 							if (col.validationFunction){
 								col.validationFunction(newValue)
@@ -224,7 +265,12 @@
 
 									});
 							}else{
-								scope.tree_rows[index].branch[col.field] = newValue;
+								for (var i = 0; i < scope.tree_rows.length; i++) {
+									if (scope.tree_rows[i].branch.uid === id){
+										scope.tree_rows[i].branch[col.field] = newValue;
+										break;
+									}
+								}
 							}
 						}
 
