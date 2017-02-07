@@ -20,7 +20,7 @@ angular
 		},
 		controller: function ($scope, $window, $timeout, $compile, $element) {
 			var vm = this;
-			
+
 			vm.cellValue = vm.value;
 
 			$scope.isInEditMode = false;
@@ -42,12 +42,12 @@ angular
 				vm.onSave({'newValue': newValue});
 			}
 
-			$scope.updateRow = function(parentId){
+			$scope.updateRow = function(parentId, afterItemId){
 				$timeout(function() {
 					$scope.isInEditMode = false;
 				}, 0);
 				$window.onclick = null;
-				vm.onUpdateRow({'parentId': parentId});
+				vm.onUpdateRow({'parentId': parentId, 'afterItemId': afterItemId});
 			}
 
 			closeSearchWhenClickingElsewhere = function(event, $scope) {
@@ -88,7 +88,7 @@ angular
 					$element.children().append(newDirective);
 					$compile(newDirective)($scope);
 				}else if (vm.type === 'edit-row-position'){
-					var newDirective = angular.element('<edit-row-position field="vm.field" row="vm.row" tree-rows="vm.treeRows" is-in-edit-mode="isInEditMode" update-row="updateRow(parentId)" ></edit-row-position>');
+					var newDirective = angular.element('<edit-row-position field="vm.field" row="vm.row" tree-rows="vm.treeRows" is-in-edit-mode="isInEditMode" update-row="updateRow(parentId, afterItemId)" ></edit-row-position>');
 					$element.children().append(newDirective);
 					$compile(newDirective)($scope);
 				}
