@@ -29,7 +29,7 @@
 					"         <div ng-if=\"!col.cellTemplate && !col.editable\">{{row.branch[col.field]}}</div>\n" +
                     "       </td>\n" +
 					"       <td>\n" +
-					"         <editable-cell type=\"'edit-row-position'\" tree_rows=\"tree_rows\" row=\"row\" field=\"colDefinitions[0].field\" on-update-row=\"onUpdateRowPosition(parentId, row.branch.uid)\"></editable-cell>\n" +
+					"         <editable-cell type=\"'edit-row-position'\" tree_rows=\"tree_rows\" row=\"row\" field=\"colDefinitions[0].field\" on-update-row=\"onUpdateRowPosition(parentId, afterItemId, row.branch.uid)\"></editable-cell>\n" +
 					"		</td>\n" +
                     "     </tr>\n" +
                     "   </tbody>\n" +
@@ -209,42 +209,72 @@
                                 }
                             }
                         };
-						scope.onUpdateRowPosition = function(parentId, currentId){
-							for (var i = 0; i < scope.tree_rows.length; i++) {
-								if (scope.tree_rows[i].branch.uid === currentId){
-									scope.tree_rows.splice(i, 1);
-								}
-							}
-
-							var foundBranch = null;
-							function findAndDelete(arr, id)
-							{
-								for (var i = 0; i < arr.length; i++) {
-									if (arr[i].uid === id){
-										foundBranch = angular.copy(arr[i]);
-										arr.splice(i, 1);
-									}else if (arr[i].children.length > 0){
-										findAndDelete(arr[i].children, id);
+						scope.onUpdateRowPosition = function(parentId, afterItemId, currentId){
+							if (parentId && afterItemId){
+								for (var i = 0; i < scope.tree_rows.length; i++) {
+									if (scope.tree_rows[i].branch.uid === currentId){
+										scope.tree_rows.splice(i, 1);
 									}
 								}
-							}
 
-							function changeBranchPosition(arr, id)
-							{
-								for (var i = 0; i < arr.length; i++) {
-									if (arr[i].uid === id){
-										foundBranch.level = arr[i].level + 1;
-										foundBranch.parent_uid = arr[i].uid;
-										arr[i].children.push(foundBranch);
-									}else if (arr[i].children.length > 0){
-										changeBranchPosition(arr[i].children, id);
+								var foundBranch = null;
+								function findAndDelete(arr, id)
+								{
+									for (var i = 0; i < arr.length; i++) {
+										if (arr[i].uid === id){
+											foundBranch = angular.copy(arr[i]);
+											arr.splice(i, 1);
+										}else if (arr[i].children.length > 0){
+											findAndDelete(arr[i].children, id);
+										}
 									}
 								}
-							}
 
-							findAndDelete(scope.treeData, currentId);
-							if (foundBranch){
-								changeBranchPosition(scope.treeData, parentId);
+								function changeBranchPosition(arr, id, afterItemId)
+								{
+									if (id === 'root'){
+										foundBranch.level = 1;
+										foundBranch.parent_uid = null;
+										if (afterItemId === 'first'){
+											arr.unshift(foundBranch);
+										}else{
+											var indexToInserAfter = null;
+											for (var i = 0; i < arr.length; i++) {
+												if (arr[i].uid === afterItemId){
+													indexToInserAfter = i;
+													break;
+												}
+											}
+											arr.splice((indexToInserAfter + 1), 0, foundBranch);
+										}
+									}else{
+										for (var i = 0; i < arr.length; i++) {
+											if (arr[i].uid === id){
+												foundBranch.level = arr[i].level + 1;
+												foundBranch.parent_uid = arr[i].uid;
+												if (afterItemId === 'first'){
+													arr[i].children.unshift(foundBranch);
+												}else{
+													var indexToInserAfter = null;
+													for (var j = 0; j < arr[i].children.length; j++) {
+														if (arr[i].children[j].uid === afterItemId){
+															indexToInserAfter = j;
+															break;
+														}
+													}
+													arr[i].children.splice((indexToInserAfter + 1), 0, foundBranch);
+												}
+											}else if (arr[i].children.length > 0){
+												changeBranchPosition(arr[i].children, id);
+											}
+										}
+									}
+								}
+
+								findAndDelete(scope.treeData, currentId);
+								if (foundBranch){
+									changeBranchPosition(scope.treeData, parentId, afterItemId);
+								}
 							}
 						}
 
