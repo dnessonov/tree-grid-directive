@@ -5,7 +5,7 @@
             '$templateCache',
             function ($templateCache) {
                 $templateCache.put('template/treeGrid/treeGrid.html',
-                    "<div class=\"table-responsive\">\n" +
+                    "<div id=\"table-responsive-id\" class=\"table-responsive\">\n" +
                     " <table class=\"table tree-grid\">\n" +
                     "   <thead>\n" +
                     "     <tr>\n" +
@@ -29,7 +29,7 @@
 					"         <div ng-if=\"!col.cellTemplate && !col.editable\">{{row.branch[col.field]}}</div>\n" +
                     "       </td>\n" +
 					"       <td>\n" +
-					"         <editable-cell type=\"'edit-row-position'\" tree_rows=\"tree_rows\" row=\"row\" field=\"colDefinitions[0].field\" on-update-row=\"onUpdateRowPosition(parentId, afterItemId, row.branch.uid)\"></editable-cell>\n" +
+					"         <button ng-click=\"showEditDialog($event, colDefinitions, row)\">Edit</button>\n" +
 					"		</td>\n" +
                     "     </tr>\n" +
                     "   </tbody>\n" +
@@ -39,7 +39,8 @@
             }]);
     angular
         .module('treeGrid', [
-            'template/treeGrid/treeGrid.html'
+            'template/treeGrid/treeGrid.html',
+			'ngMaterial'
         ])
 
         .directive('compile', [
@@ -74,8 +75,9 @@
         .directive('treeGrid', [
             '$timeout',
             'treegridTemplate',
+			'$mdDialog',
             function ($timeout,
-                      treegridTemplate) {
+                      treegridTemplate, $mdDialog) {
 
                 return {
                     restrict: 'E',
@@ -276,6 +278,157 @@
 									changeBranchPosition(scope.treeData, parentId, afterItemId);
 								}
 							}
+						}
+
+						scope.showEditDialog = function(e, colDefinitions, row){
+
+							function DialogController($scope, $mdDialog, $compile, colDefinitions, row, treeRows) {
+								$scope.localValues = {};
+								$scope.colDefinitions = colDefinitions;
+
+								$scope.localSelectValues = [{value: 'root', text: 'Root Level'}];
+								$scope.localParentValue = null;
+
+								$scope.localSelectChildrenValues = [];
+								$scope.localChildValue = null;
+
+								$scope.hide = function() {
+									$mdDialog.hide();
+								};
+
+								$scope.cancel = function() {
+									$mdDialog.cancel();
+								};
+
+								$scope.answer = function() {
+									$mdDialog.hide({row: $scope.localValues, posOptions: {parentId: $scope.localParentValue, childId: $scope.localChildValue} });
+								};
+
+								$scope.parentItemChanged = function(){
+									var foundBranch = null;
+
+									if ($scope.localParentValue === 'root'){
+										$scope.localSelectChildrenValues = [];
+										if (row.branch.level !== 1){
+											$scope.localSelectChildrenValues.push({value: 'first', text: 'First Item'});
+											for (var i = 0; i < treeRows.length; i++){
+												if (treeRows[i].level === 1){
+													$scope.localSelectChildrenValues.push({value: treeRows[i].branch.uid, text: treeRows[i].branch[colDefinitions[0].field]});
+												}
+											}
+										}else{
+											var rootElements = [];
+											var prevChild = null;
+
+											for (var i = 0; i < treeRows.length; i++){
+												if (treeRows[i].level === 1){
+													rootElements.push(treeRows[i]);
+												}
+											}
+											for (var i = 0; i < rootElements.length; i++){
+												if (rootElements[i].branch.uid !== row.branch.uid){
+													$scope.localSelectChildrenValues.push({value: rootElements[i].branch.uid, text: rootElements[i].branch[colDefinitions[0].field]});
+												}else if (rootElements[i-1]){
+													prevChild = rootElements[i-1];
+												}
+											}
+											if (prevChild){
+												var indexToExclude = null;
+												for (var i = 0; i < $scope.localSelectChildrenValues.length; i++){
+													if ($scope.localSelectChildrenValues[i].uid === prevChild.uid){
+														indexToExclude = i;
+														break;
+													}
+												}
+												$scope.localSelectChildrenValues.splice(indexToExclude, 1);
+												$scope.localSelectChildrenValues.unshift({value: 'first', text: 'First Item'});
+											}
+										}
+									}else {
+										var prevChild = null;
+										$scope.localSelectChildrenValues = [];
+										for (var i = 0; i < treeRows.length; i++){
+											if ($scope.localParentValue === treeRows[i].branch.uid && treeRows[i].branch.children.length > 0){
+												if (treeRows[i].branch.uid !== row.branch.parent_uid){
+													$scope.localSelectChildrenValues.unshift({value: 'first', text: 'First Item'});
+												}
+												for (var j = 0; j < treeRows[i].branch.children.length; j++){
+													if (treeRows[i].branch.children[j].uid !== row.branch.uid){
+														$scope.localSelectChildrenValues.push({value: treeRows[i].branch.children[j].uid, text: treeRows[i].branch.children[j][colDefinitions[0].field]});
+													}else if(treeRows[i].branch.children[j-1]){
+														prevChild = treeRows[i].branch.children[j-1];
+													}
+
+												}
+											}else if ($scope.localParentValue === treeRows[i].branch.uid && treeRows[i].branch.children.length <= 0){
+												$scope.localSelectChildrenValues.unshift({value: 'first', text: 'First Item'});
+												break;
+											}
+										}
+										if (prevChild){
+											var indexToExclude = null;
+											for (var i = 0; i < $scope.localSelectChildrenValues.length; i++){
+												if ($scope.localSelectChildrenValues[i].uid === prevChild.uid){
+													indexToExclude = i;
+													break;
+												}
+											}
+											$scope.localSelectChildrenValues.splice(indexToExclude, 1);
+											$scope.localSelectChildrenValues.unshift({value: 'first', text: 'First Item'});
+										}
+									}
+								}
+
+								var initParentvalues = function(){
+									var idsToExclude = [row.branch.uid];
+									for (var i = 0; i < treeRows.length; i++){
+										if ( idsToExclude.indexOf(treeRows[i].branch.uid) !== -1 ){
+											continue;
+										}
+
+										if ( treeRows[i].branch.parent_uid && idsToExclude.indexOf(treeRows[i].branch.parent_uid) !== -1 ){
+											idsToExclude.push(treeRows[i].branch.uid);
+											continue;
+										}
+
+										$scope.localSelectValues.push({value: treeRows[i].branch.uid, text: treeRows[i].branch[colDefinitions[0].field]});
+									}
+								}
+
+								var init = function(){
+									for (var i = 0; i < colDefinitions.length; i++){
+										$scope.localValues[colDefinitions[i].field] = row.branch[colDefinitions[i].field];
+									}
+									initParentvalues();
+								}
+
+								init();
+							}
+
+							$mdDialog.show({
+									controller: DialogController,
+									templateUrl: 'node_modules/angular-bootstrap-grid-tree/src/dialog-template.html',
+									parent: angular.element(document.body),
+									targetEvent: e,
+									clickOutsideToClose:true,
+									fullscreen: false,
+									locals: {
+										colDefinitions: colDefinitions,
+										row: row,
+										treeRows: scope.tree_rows
+									}
+								})
+								.then(function(values) {
+									for (var i = 0; i < colDefinitions.length; i++){
+										if (values.row[colDefinitions[i].field] !== row.branch[colDefinitions[i].field]){
+											scope.onSave(values.row[colDefinitions[i].field], row.branch.uid, colDefinitions[i]);
+										}
+									}
+									if (values.posOptions.parentId && values.posOptions.childId){
+										scope.onUpdateRowPosition(values.posOptions.parentId, values.posOptions.childId, row.branch.uid);
+									}
+								}, function() {
+								});
 						}
 
 						scope.onSave = function (newValue, id, col) {
