@@ -1,7 +1,6 @@
 require('./editable-input');
 require('./editable-checkbox');
 require('./editable-select');
-require('./edit-row-position');
 
 angular
 	.module('treeGrid')
@@ -10,11 +9,9 @@ angular
 		controllerAs: 'vm',
 		bindings: {
 			value: '=',
-			type: '=',
+			editValue: '=',
 			onSave: '&',
-			onUpdateRow: '&',
 			options: '=',
-			treeRows: '=',
 			row: '=',
 			field: '='
 		},
@@ -42,14 +39,6 @@ angular
 				vm.onSave({'newValue': newValue});
 			}
 
-			$scope.updateRow = function(parentId, afterItemId){
-				$timeout(function() {
-					$scope.isInEditMode = false;
-				}, 0);
-				$window.onclick = null;
-				vm.onUpdateRow({'parentId': parentId, 'afterItemId': afterItemId});
-			}
-
 			closeSearchWhenClickingElsewhere = function(event, $scope) {
 
 				var clickedElement = event.target;
@@ -75,20 +64,16 @@ angular
 			this.$onInit = function() {
 				var containerId = 'tree-greed-directive-editable-cell-wrap';
 
-				if (vm.type === 'text'){
-					var newDirective = angular.element('<editable-input value="vm.cellValue" is-in-edit-mode="isInEditMode" save-value="saveValue(newValue)" ></editable-input>');
+				if (vm.options.type === 'text'){
+					var newDirective = angular.element('<editable-input value="vm.row.branch[vm.options.field]" edit-value="vm.editValue" is-in-edit-mode="vm.row.isInEditMode" ></editable-input>');
 					$element.children().append(newDirective);
 					$compile(newDirective)($scope);
-				}else if (vm.type === 'checkbox'){
-					var newDirective = angular.element('<editable-checkbox value="vm.cellValue" is-in-edit-mode="isInEditMode" save-value="saveValue(newValue)" ></editable-checkbox>');
+				}else if (vm.options.type === 'checkbox'){
+					var newDirective = angular.element('<editable-checkbox value="vm.row.branch[vm.options.field]" edit-value="vm.editValue" is-in-edit-mode="vm.row.isInEditMode" ></editable-checkbox>');
 					$element.children().append(newDirective);
 					$compile(newDirective)($scope);
-				}else if (vm.type === 'select'){
-					var newDirective = angular.element('<editable-select options="vm.options" value="vm.cellValue" is-in-edit-mode="isInEditMode" save-value="saveValue(newValue)" ></editable-select>');
-					$element.children().append(newDirective);
-					$compile(newDirective)($scope);
-				}else if (vm.type === 'edit-row-position'){
-					var newDirective = angular.element('<edit-row-position field="vm.field" row="vm.row" tree-rows="vm.treeRows" is-in-edit-mode="isInEditMode" update-row="updateRow(parentId, afterItemId)" ></edit-row-position>');
+				}else if (vm.options.type === 'select'){
+					var newDirective = angular.element('<editable-select options="vm.options" value="vm.row.branch[vm.options.field]" edit-value="vm.editValue" is-in-edit-mode="vm.row.isInEditMode" ></editable-select>');
 					$element.children().append(newDirective);
 					$compile(newDirective)($scope);
 				}

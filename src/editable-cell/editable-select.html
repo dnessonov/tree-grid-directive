@@ -1,9 +1,8 @@
 <div class="tree-greed-directive-non-editable-cell-element" ng-show="!vm.isInEditMode">{{vm.value}}</div>
 <div ng-show="vm.isInEditMode" class="tree-greed-directive-editable-cell-control">
-	<select class="tree-greed-directive-editable-cell-element" ng-model="vm.localValue">
+	<select class="tree-greed-directive-editable-cell-element" ng-model="vm.editValue">
 		<option ng-repeat="data in vm.options.allowedValues" value="{{data}}">
 			{{data}}
 		</option>
 	</select>
-	<button class="tree-greed-directive-editable-cell-control" ng-click="saveValue()">Save</button>
 </div>
