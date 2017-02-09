@@ -23,13 +23,15 @@
                     "              <span  ng-if=\"!expandingProperty.cellTemplate\" class=\"indented tree-label\" ng-click=\"on_user_click(row.branch)\">\n" +
                     "             {{row.branch[expandingProperty.field] || row.branch[expandingProperty]}}</span>\n" +
                     "       </td>\n" +
-                    "       <td ng-repeat=\"col in colDefinitions\">\n" +
+                    "       <td ng-click=\"clickOnCell(row)\" class=\"tree-greed-directive-editable-cell-wrap\" ng-repeat=\"col in colDefinitions\">\n" +
                     "         <div ng-if=\"col.cellTemplate\" compile=\"col.cellTemplate\" cell-template-scope=\"col.cellTemplateScope\"></div>\n" +
-					"         <editable-cell ng-if=\"col.editable\" options=\"col\" type=\"col.type\" value=\"row.branch[col.field]\" on-save=\"onSave(newValue, row.branch.uid, col)\"></editable-cell>\n" +
+					"         <editable-cell ng-if=\"col.editable\" options=\"col\" row=\"row\" edit-value=\"currentEditRow[col.field]\" value=\"row.branch[col.field]\" on-save=\"onSave(newValue, row.branch.uid, col)\"></editable-cell>\n" +
 					"         <div ng-if=\"!col.cellTemplate && !col.editable\">{{row.branch[col.field]}}</div>\n" +
                     "       </td>\n" +
 					"       <td>\n" +
-					"         <button ng-click=\"showEditDialog($event, colDefinitions, row)\">Edit</button>\n" +
+					"         <button ng-if=\"(currentEditRow.uid !== row.branch.uid)\" ng-click=\"showEditDialog($event, colDefinitions, row)\">Popup</button>\n" +
+					"         <button ng-if=\"(currentEditRow.uid === row.branch.uid)\" class=\"tree-greed-directive-editable-cell-control\" ng-click=\"saveRow(row)\">Save</button>\n" +
+					"         <button ng-if=\"(currentEditRow.uid === row.branch.uid)\" class=\"tree-greed-directive-editable-cell-control\" ng-click=\"cancelEdit()\">Cancel</button>\n" +
 					"		</td>\n" +
                     "     </tr>\n" +
                     "   </tbody>\n" +
@@ -76,8 +78,9 @@
             '$timeout',
             'treegridTemplate',
 			'$mdDialog',
+			'$window',
             function ($timeout,
-                      treegridTemplate, $mdDialog) {
+                      treegridTemplate, $mdDialog, $window) {
 
                 return {
                     restrict: 'E',
@@ -431,6 +434,61 @@
 								});
 						}
 
+						var closeSearchWhenClickingElsewhere = function(event) {
+							var clickedElement = event.target;
+							if (!clickedElement) return;
+
+							var elementClasses = clickedElement.classList;
+							
+							var result = elementClasses.contains('tree-greed-directive-non-editable-cell-element')
+								|| elementClasses.contains('tree-greed-directive-editable-cell-element')
+								|| elementClasses.contains('tree-greed-directive-editable-cell-wrap')
+								|| elementClasses.contains('tree-greed-directive-editable-cell-control');
+							
+							if (!result) {
+								for (var i = 0; i < scope.tree_rows.length; i++){
+									scope.tree_rows[i].isInEditMode = false;
+								}
+								$window.onclick = null;
+								scope.currentEditRow = null;
+								scope.$apply();
+							}
+						}
+
+						scope.cancelEdit = function(){
+							for (var i = 0; i < scope.tree_rows.length; i++){
+								scope.tree_rows[i].isInEditMode = false;
+							}
+							$window.onclick = null;
+							scope.currentEditRow = null;
+						}
+
+						scope.saveRow = function(row){
+							for (var i = 0; i < scope.colDefinitions.length; i++){
+								if (scope.currentEditRow[scope.colDefinitions[i].field] !== row.branch[scope.colDefinitions[i].field]){
+									scope.onSave(scope.currentEditRow[scope.colDefinitions[i].field], row.branch.uid, scope.colDefinitions[i]);
+								}
+							}
+							for (var i = 0; i < scope.tree_rows.length; i++){
+								scope.tree_rows[i].isInEditMode = false;
+							}
+							scope.currentEditRow = null;
+						}
+
+						scope.clickOnCell = function(row){
+							if (!scope.currentEditRow || row.branch.uid !== scope.currentEditRow.uid){
+								for (var i = 0; i < scope.tree_rows.length; i++){
+									scope.tree_rows[i].isInEditMode = false;
+								}
+								row.isInEditMode = true;
+								scope.currentEditRow = angular.copy(row.branch);
+
+								$window.onclick = function (event) {
+									closeSearchWhenClickingElsewhere(event);
+								};
+							}
+						}
+
 						scope.onSave = function (newValue, id, col) {
 							if (col.validationFunction){
 								col.validationFunction(newValue)
@@ -638,6 +696,7 @@
                                     tree_icon: tree_icon,
                                     visible: visible
                                 });
+
                                 if (branch.children != null) {
                                     _ref = branch.children;
                                     _results = [];
