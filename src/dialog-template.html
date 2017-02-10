@@ -6,37 +6,68 @@
 			</div>
 		</md-toolbar>
 
-		<md-dialog-content>
-			<div id="editable-grid-modal-content-element" class="md-dialog-content">
-				<div class="test11" ng-repeat="col in colDefinitions">
-					<div ng-if="col.type === 'text'">
-						<label>{{col.field}}</label>
-						<input ng-model="localValues[col.field]" />
+		<div class="editable-grid-custom-modal-content">
+			<div id="editable-grid-modal-content-element">
+				<md-content layout="row" class="position-controls-row">
+					<md-input-container flex="50">
+						<label>Parent</label>
+						<md-select ng-model="localParentValue" ng-change="parentItemChanged()">
+							<md-option ng-repeat="option in localSelectValues" value="{{option.value}}">{{option.text}}</md-option>
+						</md-select>
+					</md-input-container>
+
+					<md-input-container flex="50" ng-show="localSelectChildrenValues.length > 0">
+						<label>After</label>
+						<md-select ng-model="localChildValue">
+							<md-option ng-repeat="option in localSelectChildrenValues" value="{{option.value}}">{{option.text}}</md-option>
+						</md-select>
+					</md-input-container>
+				</md-content>
+
+				<div layout="row" class="values-controls-row">
+					<div flex="50">
+						<div ng-repeat="col in colDefinitions" ng-if="$even">
+							<div ng-if="col.type === 'text'">
+								<md-input-container>
+									<label>{{col.field}}</label>
+									<input ng-model="localValues[col.field]" />
+								</md-input-container>
+							</div>
+							<div ng-if="col.type === 'select'">
+								<md-input-container>
+									<label>{{col.field}}</label>
+									<md-select ng-model="localValues[col.field]">
+										<md-option ng-repeat="data in col.allowedValues" value="{{data}}">
+											{{data}}
+										</md-option>
+									</md-select>
+								</md-input-container>
+							</div>
+						</div>
 					</div>
-					<div ng-if="col.type === 'select'">
-						<label>{{col.field}}</label>
-						<select ng-model="localValues[col.field]">
-							<option ng-repeat="data in col.allowedValues" value="{{data}}">
-								{{data}}
-							</option>
-						</select>
+					<div flex="50">
+						<div ng-repeat="col in colDefinitions" ng-if="$odd">
+							<div ng-if="col.type === 'text'">
+								<md-input-container>
+									<label>{{col.field}}</label>
+									<input ng-model="localValues[col.field]" />
+								</md-input-container>
+							</div>
+							<div ng-if="col.type === 'select'">
+								<md-input-container>
+									<label>{{col.field}}</label>
+									<md-select ng-model="localValues[col.field]">
+										<md-option ng-repeat="data in col.allowedValues" value="{{data}}">
+											{{data}}
+										</md-option>
+									</md-select>
+								</md-input-container>
+							</div>
+						</div>
 					</div>
-				</div>
-				<md-divider></md-divider>
-				<div>
-					<label>Parent</label>
-					<select ng-model="localParentValue" ng-change="parentItemChanged()">
-						<option ng-repeat="option in localSelectValues" value="{{option.value}}">{{option.text}}</option>
-					</select>
-				</div>
-				<div ng-show="localSelectChildrenValues.length > 0">
-					<label>After</label>
-					<select ng-model="localChildValue">
-						<option ng-repeat="option in localSelectChildrenValues" value="{{option.value}}">{{option.text}}</option>
-					</select>
 				</div>
 			</div>
-		</md-dialog-content>
+		</div>
 
 		<md-dialog-actions layout="row">
 			<span flex></span>

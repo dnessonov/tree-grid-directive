@@ -288,6 +288,9 @@
 							function DialogController($scope, $mdDialog, $compile, colDefinitions, row, treeRows) {
 								$scope.localValues = {};
 								$scope.colDefinitions = colDefinitions;
+								
+								console.log(colDefinitions);
+								console.log(row);
 
 								$scope.localSelectValues = [{value: 'root', text: 'Root Level'}];
 								$scope.localParentValue = null;
@@ -439,12 +442,12 @@
 							if (!clickedElement) return;
 
 							var elementClasses = clickedElement.classList;
-							
+
 							var result = elementClasses.contains('tree-greed-directive-non-editable-cell-element')
 								|| elementClasses.contains('tree-greed-directive-editable-cell-element')
 								|| elementClasses.contains('tree-greed-directive-editable-cell-wrap')
 								|| elementClasses.contains('tree-greed-directive-editable-cell-control');
-							
+
 							if (!result) {
 								for (var i = 0; i < scope.tree_rows.length; i++){
 									scope.tree_rows[i].isInEditMode = false;
