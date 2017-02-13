@@ -29,9 +29,9 @@
 					"         <div ng-if=\"!col.cellTemplate && !col.editable\">{{row.branch[col.field]}}</div>\n" +
                     "       </td>\n" +
 					"       <td>\n" +
-					"         <button ng-if=\"(currentEditRow.uid !== row.branch.uid)\" ng-click=\"showEditDialog($event, colDefinitions, row)\">Popup</button>\n" +
-					"         <button ng-if=\"(currentEditRow.uid === row.branch.uid)\" class=\"tree-greed-directive-editable-cell-control\" ng-click=\"saveRow(row)\">Save</button>\n" +
-					"         <button ng-if=\"(currentEditRow.uid === row.branch.uid)\" class=\"tree-greed-directive-editable-cell-control\" ng-click=\"cancelEdit()\">Cancel</button>\n" +
+					"         <md-button ng-if=\"(currentEditRow.uid !== row.branch.uid)\" class=\"md-raised md-primary\" ng-click=\"showEditDialog($event, colDefinitions, row)\">Edit</md-button>\n" +
+					"         <md-button ng-if=\"(currentEditRow.uid === row.branch.uid)\" class=\"md-raised md-primary tree-greed-directive-editable-cell-control\" ng-click=\"saveRow(row)\">Save</md-button>\n" +
+					"         <md-button ng-if=\"(currentEditRow.uid === row.branch.uid)\" class=\"md-raised tree-greed-directive-editable-cell-control\" ng-click=\"cancelEdit()\">Cancel</md-button>\n" +
 					"		</td>\n" +
                     "     </tr>\n" +
                     "   </tbody>\n" +
@@ -288,9 +288,6 @@
 							function DialogController($scope, $mdDialog, $compile, colDefinitions, row, treeRows) {
 								$scope.localValues = {};
 								$scope.colDefinitions = colDefinitions;
-								
-								console.log(colDefinitions);
-								console.log(row);
 
 								$scope.localSelectValues = [{value: 'root', text: 'Root Level'}];
 								$scope.localParentValue = null;
